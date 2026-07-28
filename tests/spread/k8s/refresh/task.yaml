@@ -4,4 +4,11 @@ environment:
   KRAFT/single: single
   KRAFT/multi: multi
 execute: |
-  tox run -e "integration-k8s-$TEST_ENV" -- --model testing -m 'not unstable' --kraft-mode "$KRAFT"
+  # FIXME: remove this when the previously installed charmcraft snap supports monorepos.
+  sudo apt-get install -y rsync
+  git clone https://github.com/canonical/charmcraft \
+    --branch work/CHARMCRAFT-710-prototype \
+    ~/charmcraft
+  pushd ~/charmcraft && uv run charmcraft --version && popd
+  CHARMCRAFT_BIN=$(realpath ~/charmcraft/.venv/bin/charmcraft) \
+    tox run -e "integration-k8s-$TEST_ENV" -- --model testing -m 'not unstable' --kraft-mode "$KRAFT"

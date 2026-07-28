@@ -58,13 +58,18 @@ def _build_pinned_refresh_charm(
         f.write(yaml.safe_dump(cc))
 
     logger.info(f"Building {version} refresh charm, using {tmp_dir}. might take a while...")
-    subprocess.check_output(
-        f"{CHARMCRAFT} pack",
-        shell=True,
-        stderr=subprocess.PIPE,
-        cwd=f"{tmp_dir}/k8s",
-        env=os.environ | {"CHARMCRAFT_EXPERIMENTAL_MONOREPO": "true"},
-    )
+    try:
+        subprocess.check_output(
+            f"{CHARMCRAFT} pack",
+            shell=True,
+            stderr=subprocess.PIPE,
+            cwd=f"{tmp_dir}/k8s",
+            env=os.environ | {"CHARMCRAFT_EXPERIMENTAL_MONOREPO": "true"},
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(f"pack failed:\n{e.stdout=}\n{e.stderr=}")
+        logger.info(os.listdir(f"{tmp_dir}/k8s"))
+        raise e
     if not (paths := glob.glob(f"{tmp_dir}/k8s/*.charm")):
         raise RuntimeError("Can not find built charm path!")
 
